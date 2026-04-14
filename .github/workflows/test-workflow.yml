@@ -26,60 +26,39 @@ on:
 
 
 jobs:
-  test-marker:
-    name: Validate E2E Selection Logic
-
-    # ✅ THIS IS THE IMPORTANT SKIP LOGIC (same as production)
+  run-e2e-tests:
+    name: Run E2E Tests
     if: >
       github.event.inputs.run_import_only == 'true' ||
       github.event.inputs.run_invalid_package == 'true' ||
       github.event.inputs.run_on_prem == 'true' ||
       github.event.inputs.run_others == 'true'
-
     runs-on: ubuntu-latest
-
     steps:
-      - name: Show inputs
-        run: |
-          echo "================ INPUTS ================"
-          echo "import-only:     ${{ github.event.inputs.run_import_only }}"
-          echo "invalid-package: ${{ github.event.inputs.run_invalid_package }}"
-          echo "on-prem:         ${{ github.event.inputs.run_on_prem }}"
-          echo "others:          ${{ github.event.inputs.run_others }}"
-          echo "========================================"
-
       - name: Build test-marker
         id: build
         run: |
           TEST_MARKER=""
-
           if [ "${{ github.event.inputs.run_import_only }}" == "true" ]; then
             TEST_MARKER="$TEST_MARKER import-only"
           fi
-
           if [ "${{ github.event.inputs.run_invalid_package }}" == "true" ]; then
             TEST_MARKER="$TEST_MARKER invalid-package"
           fi
-
           if [ "${{ github.event.inputs.run_on_prem }}" == "true" ]; then
             TEST_MARKER="$TEST_MARKER on-prem"
           fi
-
           if [ "${{ github.event.inputs.run_others }}" == "true" ]; then
             TEST_MARKER="$TEST_MARKER others"
           fi
-
           TEST_MARKER=$(echo $TEST_MARKER | xargs | tr ' ' ',')
-
           echo "test-marker=$TEST_MARKER" >> $GITHUB_OUTPUT
-
-      - name: Print final result
+      - name: Show test-marker
         run: |
-          echo "================ RESULT ================"
-          echo "test-marker: ${{ steps.build.outputs.test-marker }}"
-          echo "========================================"
-
-      - name: Validate E2E behavior
+          echo "================================"
+          echo "TEST-MARKER: ${{ steps.build.outputs.test-marker }}"
+          echo "================================"
+      - name: Run E2E tests
         run: |
-          echo "E2E WOULD RUN with markers:"
+          echo "Running E2E with markers:"
           echo "${{ steps.build.outputs.test-marker }}"
