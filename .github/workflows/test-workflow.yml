@@ -31,10 +31,10 @@ jobs:
 
     # ✅ THIS IS THE IMPORTANT SKIP LOGIC (same as production)
     if: >
-      github.event.inputs.run_import_only == true ||
-      github.event.inputs.run_invalid_package == true ||
-      github.event.inputs.run_on_prem == true ||
-      github.event.inputs.run_others == true
+      github.event.inputs.run_import_only == 'true' ||
+      github.event.inputs.run_invalid_package == 'true' ||
+      github.event.inputs.run_on_prem == 'true' ||
+      github.event.inputs.run_others == 'true'
 
     runs-on: ubuntu-latest
 
