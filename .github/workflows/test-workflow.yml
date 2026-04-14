@@ -1,0 +1,76 @@
+name: Test E2E Marker Builder
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_import_only:
+        description: "Run E2E: import-only"
+        required: false
+        type: boolean
+        default: false
+      run_invalid_package:
+        description: "Run E2E: invalid-package"
+        required: false
+        type: boolean
+        default: false
+      run_on_prem:
+        description: "Run E2E: on-prem"
+        required: false
+        type: boolean
+        default: false
+      run_others:
+        description: "Run E2E: others"
+        required: false
+        type: boolean
+        default: false
+
+
+jobs:
+  test-marker:
+    name: Build and Verify Test Marker
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Show inputs
+        run: |
+          echo "=== INPUTS ==="
+          echo "import-only:        ${{ github.event.inputs.run_import_only }}"
+          echo "invalid-package:    ${{ github.event.inputs.run_invalid_package }}"
+          echo "on-prem:            ${{ github.event.inputs.run_on_prem }}"
+          echo "others:             ${{ github.event.inputs.run_others }}"
+
+      - name: Build test-marker
+        id: build
+        run: |
+          TEST_MARKER=$(
+            join(
+              fromJSON(
+                format(
+                  '[{0}{1}{2}{3}]',
+                  github.event.inputs.run_import_only == true && '"import-only"' || '',
+                  github.event.inputs.run_invalid_package == true && ',"invalid-package"' || '',
+                  github.event.inputs.run_on_prem == true && ',"on-prem"' || '',
+                  github.event.inputs.run_others == true && ',"others"' || ''
+                )
+              ),
+              ','
+            )
+          )
+
+          echo "test-marker=$TEST_MARKER" >> $GITHUB_OUTPUT
+
+      - name: Print computed test-marker
+        run: |
+          echo "=============================="
+          echo "FINAL TEST-MARKER:"
+          echo "${{ steps.build.outputs.test-marker }}"
+          echo "=============================="
+
+      - name: Evaluate E2E decision
+        run: |
+          if [ -z "${{ steps.build.outputs.test-marker }}" ]; then
+            echo "❌ RESULT: No E2E will run (empty test-marker)"
+          else
+            echo "✅ RESULT: E2E WOULD RUN"
+            echo "Markers: ${{ steps.build.outputs.test-marker }}"
+          fi
